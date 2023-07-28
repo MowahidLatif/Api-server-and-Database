@@ -11,6 +11,7 @@ app.get('/', (req, res) => {
     res.send('Welcome to the NBA Players API!');
   });  
 
+//   Get all NBA Players in Database. This endpoint retrieves all names of players and data. 
 app.get('/nbaPlayers', async (req, res) => {
   try {
     await client.connect();
@@ -24,6 +25,56 @@ app.get('/nbaPlayers', async (req, res) => {
     await client.close();
   }
 });
+
+// Get a player by name. This endpoint retrieves a player's data given their name.
+app.get('/nbaPlayers/:name', async (req, res) => {
+    try {
+      await client.connect();
+      const collection = client.db('nbaDatabase').collection('nbaPlayers');
+      const player = await collection.findOne({ name: req.params.name });
+      if (player) {
+        res.status(200).json(player);
+      } else {
+        res.status(404).json({ message: 'Player not found' });
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Error connecting to db', err });
+    } finally {
+      await client.close();
+    }
+  });
+
+//   Get players with more than a certain number of championships. This endpoint retrieves all players who have won more than a certain number of championships.
+  app.get('/nbaPlayers/championships/:num', async (req, res) => {
+    try {
+      await client.connect();
+      const collection = client.db('nbaDatabase').collection('nbaPlayers');
+      const players = await collection.find({ championships: { $gt: parseInt(req.params.num) } }).toArray();
+      res.status(200).json(players);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Error connecting to db', err });
+    } finally {
+      await client.close();
+    }
+  });
+
+//   Get players with more than a certain number of MVPs. This endpoint retrieves all players who have won more than a certain number of MVP awards. 
+  app.get('/nbaPlayers/mvps/:num', async (req, res) => {
+    try {
+      await client.connect();
+      const collection = client.db('nbaDatabase').collection('nbaPlayers');
+      const players = await collection.find({ MVPs: { $gt: parseInt(req.params.num) } }).toArray();
+      res.status(200).json(players);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Error connecting to db', err });
+    } finally {
+      await client.close();
+    }
+  });
+  
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
